@@ -221,10 +221,13 @@ Image adjustBrightness(const Image& input, int value) {
     int channels = input.getChannels();
     Image output(width, height, channels);
     
-    // TODO: Implement this function
-    // For each pixel and each channel:
-    //   new_value = input(y, x, c) + value
-    //   output(y, x, c) = max(0, min(255, new_value))
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+            for (int c = 0; c < channels; c++) {
+                output(y, x, c) = clamp(input(y, x, c) + value, 0, 255);
+            }
+        }
+    }
     
     return output;
 }
@@ -247,10 +250,14 @@ Image adjustContrast(const Image& input, float factor) {
     int channels = input.getChannels();
     Image output(width, height, channels);
     
-    // TODO: Implement this function
-    // For each pixel and each channel:
-    //   new_value = factor * (input(y, x, c) - 128) + 128
-    //   output(y, x, c) = max(0, min(255, new_value))
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+            for (int c = 0; c < channels; c++) {
+                float adjustedValue = factor * (input(y, x, c) - 128) + 128;
+                output(y, x, c) = clamp(static_cast<int>(adjustedValue), 0, 255);
+            }
+        }
+    }
     
     return output;
 }
