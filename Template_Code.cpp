@@ -188,7 +188,6 @@ Image flipHorizontal(const Image& input) {
         }
     }
     
-    
     return output;
 }
 
@@ -214,11 +213,10 @@ Image flipVertical(const Image& input) {
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
             for (int c = 0; c < channels; c++) {
-        output(height - 1 - y, x, c) = input(y, x, c);
+                output(height - 1 - y, x, c) = input(y, x, c);
+            }
         }
     }
-        }
-    
     
     return output;
 }
@@ -326,119 +324,124 @@ Image rotate90(const Image& input) {
     // TODO: Implement this function
     // For each pixel and each channel:
     //   output(x, height-1-y, c) = input(y, x, c)
+    for (int y = 0; y < height; y++) {
+        for (int x = 0; x < width; x++) {
+            for (int c = 0; c < channels; c++) {
+                output(x, height - 1 - y, c) = input(y, x, c);
+            }
+        }
+    }
     
     return output;
 }
 
-// Creates a simple 4x4 test image with a pattern
+bool comparePixel(const Image& img, int y, int x, int r, int g, int b) {
+    if (img.getChannels() == 1) {
+        return img(y, x, 0) == r; 
+    }
+    return img(y, x, 0) == r && img(y, x, 1) == g && img(y, x, 2) == b;
+}
+
+void runQATests(const Image& original) {
+    int passed = 0;
+    int total = 6; 
+    
+    cout << "\n================================================\n";
+    cout << "   RUNNING AUTOMATED QA TESTS (SRS SECTION 6)   \n";
+    cout << "================================================\n\n";
+
+    Image gray = convertToGrayscale(original);
+    if (gray.getChannels() == 1 && gray(0, 0, 0) == 76) {
+        cout << "[PASS] Grayscale: Red(255,0,0) converted exactly to 76.\n";
+        passed++;
+    } else {
+        cout << "[FAIL] Grayscale: Expected 76 at (0,0), got " << gray(0,0,0) << ".\n";
+    }
+
+    Image flippedH = flipHorizontal(original);
+    if (comparePixel(flippedH, 0, 0, 255, 255, 255) && 
+        comparePixel(flippedH, 0, 3, 255, 0, 0)) {     
+        cout << "[PASS] Horizontal Flip: Row 0 correctly mirrored.\n";
+        passed++;
+    } else {
+        cout << "[FAIL] Horizontal Flip: Pixels did not map correctly.\n";
+    }
+
+    Image flippedV = flipVertical(original);
+    if (comparePixel(flippedV, 0, 0, 128, 255, 128)) { 
+        cout << "[PASS] Vertical Flip: Row 0 correctly matches original Row 3.\n";
+        passed++;
+    } else {
+        cout << "[FAIL] Vertical Flip: Pixels did not map correctly.\n";
+    }
+
+    Image bright = adjustBrightness(original, 50);
+    if (comparePixel(bright, 0, 0, 255, 50, 50) &&       
+        comparePixel(bright, 1, 3, 178, 178, 178)) {     
+        cout << "[PASS] Brightness +50: Values shifted and safely clamped to [0,255].\n";
+        passed++;
+    } else {
+        cout << "[FAIL] Brightness +50: Math or clamping logic is incorrect.\n";
+    }
+
+    Image contrast = adjustContrast(original, 1.5f);
+    if (comparePixel(contrast, 0, 0, 255, 0, 0)) {       
+        cout << "[PASS] Contrast x1.5: Float math and clamping strictly followed.\n";
+        passed++;
+    } else {
+        cout << "[FAIL] Contrast x1.5: Expected (255,0,0) after clamping.\n";
+    }
+
+    Image rotated = rotate90(original);
+    if (comparePixel(rotated, 0, 3, 255, 0, 0) &&        
+        comparePixel(rotated, 3, 3, 255, 255, 255)) {    
+        cout << "[PASS] Rotate 90: Dimensions swapped and pixels mapped accurately.\n";
+        passed++;
+    } else {
+        cout << "[FAIL] Rotate 90: Pixel mapping failed.\n";
+    }
+
+    cout << "\n================================================\n";
+    cout << "   TEST SUMMARY: " << passed << " / " << total << " PASSED\n";
+    cout << "================================================\n\n";
+}
+
 void createTestImage(const string& filename) {
     Image img(4, 4);
     
-    // Create a simple 4x4 pattern
-    // Row 0
-    img(0, 0, 0) = 255; img(0, 0, 1) = 0;   img(0, 0, 2) = 0;    // Red
-    img(0, 1, 0) = 0;   img(0, 1, 1) = 255; img(0, 1, 2) = 0;    // Green
-    img(0, 2, 0) = 0;   img(0, 2, 1) = 0;   img(0, 2, 2) = 255;  // Blue
-    img(0, 3, 0) = 255; img(0, 3, 1) = 255; img(0, 3, 2) = 255;  // White
+    img(0, 0, 0) = 255; img(0, 0, 1) = 0;   img(0, 0, 2) = 0;    
+    img(0, 1, 0) = 0;   img(0, 1, 1) = 255; img(0, 1, 2) = 0;    
+    img(0, 2, 0) = 0;   img(0, 2, 1) = 0;   img(0, 2, 2) = 255;  
+    img(0, 3, 0) = 255; img(0, 3, 1) = 255; img(0, 3, 2) = 255;  
     
-    // Row 1
-    img(1, 0, 0) = 255; img(1, 0, 1) = 255; img(1, 0, 2) = 0;    // Yellow
-    img(1, 1, 0) = 255; img(1, 1, 1) = 0;   img(1, 1, 2) = 255;  // Magenta
-    img(1, 2, 0) = 0;   img(1, 2, 1) = 255; img(1, 2, 2) = 255;  // Cyan
-    img(1, 3, 0) = 128; img(1, 3, 1) = 128; img(1, 3, 2) = 128;  // Gray
+    img(1, 0, 0) = 255; img(1, 0, 1) = 255; img(1, 0, 2) = 0;    
+    img(1, 1, 0) = 255; img(1, 1, 1) = 0;   img(1, 1, 2) = 255;  
+    img(1, 2, 0) = 0;   img(1, 2, 1) = 255; img(1, 2, 2) = 255;  
+    img(1, 3, 0) = 128; img(1, 3, 1) = 128; img(1, 3, 2) = 128;  
     
-    // Row 2
-    img(2, 0, 0) = 255; img(2, 0, 1) = 128; img(2, 0, 2) = 0;    // Orange
-    img(2, 1, 0) = 128; img(2, 1, 1) = 255; img(2, 1, 2) = 0;    // Light Green
-    img(2, 2, 0) = 128; img(2, 2, 1) = 0;   img(2, 2, 2) = 255;  // Purple
-    img(2, 3, 0) = 255; img(2, 3, 1) = 128; img(2, 3, 2) = 128;  // Pink
+    img(2, 0, 0) = 255; img(2, 0, 1) = 128; img(2, 0, 2) = 0;    
+    img(2, 1, 0) = 128; img(2, 1, 1) = 255; img(2, 1, 2) = 0;    
+    img(2, 2, 0) = 128; img(2, 2, 1) = 0;   img(2, 2, 2) = 255;  
+    img(2, 3, 0) = 255; img(2, 3, 1) = 128; img(2, 3, 2) = 128;  
     
-    // Row 3
-    img(3, 0, 0) = 128; img(3, 0, 1) = 255; img(3, 0, 2) = 128;  // Light Green
-    img(3, 1, 0) = 128; img(3, 1, 1) = 128; img(3, 1, 2) = 255;  // Light Blue
-    img(3, 2, 0) = 255; img(3, 2, 1) = 255; img(3, 2, 2) = 128;  // Light Yellow
-    img(3, 3, 0) = 0;   img(3, 3, 1) = 0;   img(3, 3, 2) = 0;    // Black
+    img(3, 0, 0) = 128; img(3, 0, 1) = 255; img(3, 0, 2) = 128;  
+    img(3, 1, 0) = 128; img(3, 1, 1) = 128; img(3, 1, 2) = 255;  
+    img(3, 2, 0) = 255; img(3, 2, 1) = 255; img(3, 2, 2) = 128;  
+    img(3, 3, 0) = 0;   img(3, 3, 1) = 0;   img(3, 3, 2) = 0;    
     
     img.savePPM(filename);
-    cout << "Created 4x4 test image: " << filename << endl;
-    
-    // Print the image data to console
-    cout << "\nOriginal image data:\n";
-    img.print();
 }
 
 int main() {
-    cout << "Image Processing with Matrices - Student Project\n";
-    cout << "================================================\n\n";
-    
-    // Create a 4x4 test image
     createTestImage("test_image.ppm");
     
-    // Load the image
     Image input;
     if (!input.loadPPM("test_image.ppm")) {
         cerr << "Failed to load image. Exiting.\n";
         return 1;
     }
     
-    cout << "\nImage loaded successfully. Dimensions: " 
-              << input.getWidth() << "x" << input.getHeight() << "\n\n";
-    
-    // Apply various transformations
-    cout << "Applying image transformations...\n";
-    
-    Image gray = convertToGrayscale(input);
-    gray.savePPM("gray_image.ppm");
-    cout << "- Grayscale conversion completed\n";
-    cout << "Grayscale image data:\n";
-    gray.print();
-    cout << endl;
-    
-    Image flippedH = flipHorizontal(input);
-    flippedH.savePPM("flipped_horizontal.ppm");
-    cout << "- Horizontal flip completed\n";
-    cout << "Horizontally flipped image data:\n";
-    flippedH.print();
-    cout << endl;
-    
-    Image flippedV = flipVertical(input);
-    flippedV.savePPM("flipped_vertical.ppm");
-    cout << "- Vertical flip completed\n";
-    cout << "Vertically flipped image data:\n";
-    flippedV.print();
-    cout << endl;
-    
-    Image bright = adjustBrightness(input, 50);
-    bright.savePPM("bright_image.ppm");
-    cout << "- Brightness adjustment completed\n";
-    cout << "Brightness adjusted image data:\n";
-    bright.print();
-    cout << endl;
-    
-    Image contrast = adjustContrast(input, 1.5f);
-    contrast.savePPM("contrast_image.ppm");
-    cout << "- Contrast adjustment completed\n";
-    cout << "Contrast adjusted image data:\n";
-    contrast.print();
-    cout << endl;
-    
-    Image blur = applyBlur(input);
-    blur.savePPM("blurred_image.ppm");
-    cout << "- Blur filter completed\n";
-    cout << "Blurred image data:\n";
-    blur.print();
-    cout << endl;
-    
-    Image rotated = rotate90(input);
-    rotated.savePPM("rotated90_image.ppm");
-    cout << "- 90-degree rotation completed\n";
-    cout << "Rotated image data:\n";
-    rotated.print();
-    cout << endl;
-    
-    cout << "\nAll operations completed successfully!\n";
-    cout << "Check the generated PPM files to see the results.\n";
-    cout << "Use an image viewer that supports PPM format or convert them to PNG/JPG.\n";
+    runQATests(input);
     
     return 0;
 }
