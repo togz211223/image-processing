@@ -148,7 +148,7 @@ public:
 Image convertToGrayscale(const Image& input) {
     int height = input.getHeight();
     int width = input.getWidth();
-    Image output(width, height, 1); // Single channel for grayscale
+    Image output(width, height, 1); 
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
             int R = input(y, x, 0);
@@ -177,9 +177,6 @@ Image flipHorizontal(const Image& input) {
     int channels = input.getChannels();
     Image output(width, height, channels);
 
-    // TODO: Implement this function
-    // For each pixel and each channel:
-    //   output(y, width-1-x, c) = input(y, x, c)
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
             for (int c = 0; c < channels; c++) {
@@ -207,9 +204,6 @@ Image flipVertical(const Image& input) {
     int channels = input.getChannels();
     Image output(width, height, channels);
 
-    // TODO: Implement this function
-    // For each pixel and each channel:
-    //   output(height-1-y, x, c) = input(y, x, c)
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
             for (int c = 0; c < channels; c++) {
@@ -295,24 +289,15 @@ Image applyBlur(const Image& input) {
     int channels = input.getChannels();
     Image output(width, height, channels);
 
-    // TODO: Implement this function
-    // For each pixel (from y=1 to height-2, x=1 to width-2) and each channel:
-    //   sum = 0
-    //   For each neighbor (ky from -1 to 1, kx from -1 to 1):
-    //     sum += input(y+ky, x+kx, c)
-    //   output(y, x, c) = sum / 9
     for (int y = 1; y < height - 1; y++) {
         for (int x = 1; x < width - 1; x++) {
             for (int c = 0; c < channels; c++) {
-
                 int sum = 0;
-
                 for (int ky = -1; ky <= 1; ky++) {
                     for (int kx = -1; kx <= 1; kx++) {
                         sum += input(y + ky, x + kx, c);
                     }
                 }
-
                 output(y, x, c) = sum / 9;
             }
         }
@@ -335,11 +320,8 @@ Image rotate90(const Image& input) {
     int height = input.getHeight();
     int width = input.getWidth();
     int channels = input.getChannels();
-    Image output(height, width, channels); // Width and height are swapped
+    Image output(height, width, channels); 
 
-    // TODO: Implement this function
-    // For each pixel and each channel:
-    //   output(x, height-1-y, c) = input(y, x, c)
     for (int y = 0; y < height; y++) {
         for (int x = 0; x < width; x++) {
             for (int c = 0; c < channels; c++) {
@@ -360,7 +342,7 @@ bool comparePixel(const Image& img, int y, int x, int r, int g, int b) {
 
 void runQATests(const Image& original) {
     int passed = 0;
-    int total = 6;
+    int total = 7; // All 7 functions are now complete!
 
     cout << "\n================================================\n";
     cout << "   RUNNING AUTOMATED QA TESTS (SRS SECTION 6)   \n";
@@ -406,6 +388,15 @@ void runQATests(const Image& original) {
         passed++;
     } else {
         cout << "[FAIL] Contrast x1.5: Expected (255,0,0) after clamping.\n";
+    }
+
+    Image blur = applyBlur(original);
+    if (comparePixel(blur, 0, 0, 0, 0, 0) &&
+        blur(1, 1, 0) == 141) {
+        cout << "[PASS] Blur: Border pixels are 0, interior arithmetic is correct.\n";
+        passed++;
+    } else {
+        cout << "[FAIL] Blur: Expected interior Red=141 and borders=0.\n";
     }
 
     Image rotated = rotate90(original);
